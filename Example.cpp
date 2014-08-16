@@ -104,21 +104,21 @@ public:
 
 class ExampleFrontendAction : public ASTFrontendAction {
 public:
-    virtual ASTConsumer *CreateASTConsumer(CompilerInstance &CI, StringRef file) {
-        return new ExampleASTConsumer(&CI); // pass CI pointer to ASTConsumer
+    virtual std::unique_ptr<ASTConsumer> CreateASTConsumer(CompilerInstance &CI, StringRef file) {
+        return std::unique_ptr<ASTConsumer>(new ExampleASTConsumer(&CI)); // pass CI pointer to ASTConsumer
     }
 };
 
 
-
 int main(int argc, const char **argv) {
     // parse the command-line args passed to your code
-    CommonOptionsParser op(argc, argv);        
+    static cl::OptionCategory MyToolCategory("My tool options");
+    CommonOptionsParser op(argc, argv, MyToolCategory);        
     // create a new Clang Tool instance (a LibTooling environment)
     ClangTool Tool(op.getCompilations(), op.getSourcePathList());
 
     // run the Clang Tool, creating a new FrontendAction (explained below)
-    int result = Tool.run(newFrontendActionFactory<ExampleFrontendAction>());
+    int result = Tool.run(newFrontendActionFactory<ExampleFrontendAction>().get());
 
     errs() << "\nFound " << numFunctions << " functions.\n\n";
     // print out the rewritten source code ("rewriter" is a global var.)
